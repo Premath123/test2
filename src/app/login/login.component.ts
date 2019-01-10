@@ -2,8 +2,9 @@
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
-
-import { AlertService, AuthenticationService } from '../_services';
+import { User } from '../_models';
+import { AlertService, UserService } from '../_services';
+//import { AlertService, AuthenticationService } from '../_services';
 
 @Component({templateUrl: 'login.component.html'})
 export class LoginComponent implements OnInit {
@@ -11,12 +12,14 @@ export class LoginComponent implements OnInit {
     loading = false;
     submitted = false;
     returnUrl: string;
+   
 
     constructor(
         private formBuilder: FormBuilder,
         private route: ActivatedRoute,
         private router: Router,
-        private authenticationService: AuthenticationService,
+      //  private authenticationService: AuthenticationService,
+        private userService: UserService,
         private alertService: AlertService) {}
 
     ngOnInit() {
@@ -26,7 +29,8 @@ export class LoginComponent implements OnInit {
         });
 
         // reset login status
-        this.authenticationService.logout();
+       // this.authenticationService.logout();
+       // this.userService.logout();
 
         // get return url from route parameters or default to '/'
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
@@ -36,15 +40,18 @@ export class LoginComponent implements OnInit {
     get f() { return this.loginForm.controls; }
 
     onSubmit() {
+        console.log('in login submit');
         this.submitted = true;
 
         // stop here if form is invalid
         if (this.loginForm.invalid) {
             return;
         }
-
         this.loading = true;
-        this.authenticationService.login(this.f.Uid.value, this.f.password.value)
+        var user: User = new User();
+        user.uid = this.loginForm.controls["Uid"].value;
+        
+      /*  this.authenticationService.login(this.f.Uid.value, this.f.password.value)
             .pipe(first())
             .subscribe(
                 data => {
@@ -53,6 +60,22 @@ export class LoginComponent implements OnInit {
                 error => {
                     this.alertService.error(error);
                     this.loading = false;
+                });*/
+
+        this.userService.login(user)
+            .pipe(first())
+            .subscribe(
+                data => {
+                    
+                    this.alertService.success('login successful', true);
+                    this.router.navigate(['/login']);
+                },
+                error => {
+                    
+                    this.alertService.error(error);
+                    this.loading = false;
                 });
+
+
     }
 }
